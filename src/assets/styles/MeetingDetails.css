@@ -1,0 +1,321 @@
+ 
+/* MAIN WRAPPER */
+.meeting-schedule-wrapper {
+  min-height: 100vh;
+  padding: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 30px;
+}
+
+/* CARD */
+.meeting-schedule-card {
+  flex: 1;
+  max-width: 850px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* HEADER */
+.meeting-schedule-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 22px;
+  border-radius: 16px 16px 0 0;
+}
+
+.bg-blue {
+  background: #dbeafe;
+}
+.bg-emerald {
+  background: #d1fae5;
+}
+.bg-yellow {
+  background: #fef9c3;
+}
+.bg-purple {
+  background: #f3e8ff;
+}
+
+.meeting-schedule-header-icon {
+  width: 50px;
+  height: 50px;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.meeting-schedule-header-icon-color {
+  color: #2563eb;
+}
+.meeting-schedule-header-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+.meeting-schedule-header-subtitle {
+  font-size: 14px;
+  color: #475569;
+  margin: 0;
+}
+
+/* BODY */
+.meeting-schedule-body {
+  padding: 26px;
+}
+.meeting-schedule-body > section {
+  margin-bottom: 26px;
+}
+
+.meeting-schedule-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #1e293b;
+}
+
+/* INPUTS */
+.meeting-schedule-input {
+  height: 42px;
+  padding: 0 12px;
+  width: 100%;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* GRID */
+.meeting-schedule-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.meeting-schedule-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+/* CALENDAR SIDEBAR */
+.calendar-sidebar {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 32px;
+}
+
+/* --- DATEPICKER RED ROUNDED STYLING --- */
+
+/* Use ::v-deep to penetrate the component's shadow DOM */
+::v-deep .mx-datepicker-inline {
+  width: 100% !important;
+}
+
+/* This targets the selected/active date */
+::v-deep .mx-calendar-content .cell.actived {
+  background-color: #a5e83f !important;
+  color: green !important;
+  border-radius: 50% !important;
+}
+
+/* Hover state for cells */
+::v-deep .mx-calendar-content .cell:hover {
+  color: green !important;
+  background-color: #a5e83f !important;
+  border-radius: 50% !important;
+}
+
+::v-deep .mx-calendar-content .cell.disabled {
+  background-color: #fee2e2 !important; /* Light red background */
+  color: #ef4444 !important; /* Red text */
+  border-radius: 50% !important; /* Full rounded circle */
+  cursor: not-allowed !important;
+}
+::v-deep .mx-calendar-content .cell {
+  color: #000000 !important; /* Force text to black */
+  font-weight: 500;
+  border-radius: 50% !important;
+}
+
+/* --- DATEPICKER HEADER & DAYS STYLING --- */
+
+/* 1. Month and Year (e.g., Jan 2026) */
+::v-deep .mx-calendar-header-label {
+  color: #000000 !important;
+  font-weight: 800 !important; /* Extra bold */
+  font-size: 16px !important;
+  border-radius: 50% !important;
+}
+
+/* Header buttons (arrows) - Optional: making them black too */
+::v-deep .mx-btn-icon-double-left,
+::v-deep .mx-btn-icon-double-right,
+::v-deep .mx-btn-icon-left,
+::v-deep .mx-btn-icon-right {
+  color: #000000 !important;
+}
+
+/* 2. Days of the week (M, T, W, etc.) */
+::v-deep .mx-calendar-content th {
+  color: #000000 !important;
+  font-weight: 700 !important;
+  padding-bottom: 4px;
+}
+
+/* Today's date circle */
+::v-deep .mx-calendar-content .cell.today {
+  color: green !important;
+  /* background-color: #a5e83f !important; */
+  font-weight: bold;
+  border-radius: 50% !important;
+  font-size: 16px;
+}
+
+/* --- END DATEPICKER STYLING --- */
+
+/* ACTIONS */
+.meeting-schedule-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.meeting-schedule-btn-outline {
+  padding: 10px 24px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.meeting-schedule-btn-primary {
+  padding: 10px 24px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.meeting-schedule-button-check-availability {
+  height: 42px;
+  background: #2b6cb0;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 18px;
+}
+
+.error-text {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.error-input {
+  border-color: #dc2626 !important;
+  background-color: #fef2f2 !important;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Title label on left */
+.title-row label {
+  /* width: 80px;             */
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  text-align: left;
+  margin: 0;
+}
+
+/* Input on right */
+.title-row .meeting-schedule-input {
+  flex: 1;
+  width: 100%;
+}
+.attendee-row {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 10px;
+}
+
+.attendee-label {
+  font-weight: 700;
+  font-size: 16px;
+  color: #1e293b;
+  min-width: 100px; /* ensures label stays fixed */
+  margin-top: 2px;
+}
+
+.attendee-value {
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.5;
+  flex: 1;
+  word-break: break-word; /* wraps long names properly */
+}
+.attendee-chip-inline {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 13px;
+  margin-right: 6px;
+  margin-bottom: 6px;
+  white-space: nowrap;
+}
+
+.meeting-schedule-radio-group {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 10px;
+}
+
+.meeting-schedule-radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meeting-schedule-label,
+.meeting-schedule-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 1px;
+}
+.error-title{
+  margin-left: 50px !important;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .meeting-schedule-wrapper {
+    flex-direction: column;
+    align-items: center;
+  }
+  .meeting-schedule-card,
+  .calendar-sidebar {
+    width: 100%;
+    max-width: 600px;
+  }
+}
+ 

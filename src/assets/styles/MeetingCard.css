@@ -1,0 +1,90 @@
+ 
+/* MAIN CARD */
+.meeting-type-card {
+  position: relative;
+  cursor: pointer;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+/* DEFAULT STATE */
+.meeting-type-card-default:hover {
+  border-color: #94a3b8;
+}
+
+/* SELECTED STATE */
+.meeting-type-card-selected {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px #0f172a;
+}
+
+/* BACKGROUND COLORS */
+.bg-blue-50 {
+  background: #eff6ff;
+}
+.bg-emerald-100 {
+  background: #d1fae5;
+}
+.bg-yellow-100 {
+  background: #fef9c3;
+}
+.bg-purple-100 {
+  background: #f3e8ff;
+}
+
+/* RADIO BUTTON */
+.meeting-type-radio-wrapper {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.meeting-type-radio-outer {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.meeting-type-radio-selected {
+  border-color: #0f172a;
+}
+
+.meeting-type-radio-inner {
+  width: 8px;
+  height: 8px;
+  background: #0f172a;
+  border-radius: 50%;
+}
+
+/* ICON BOX */
+.meeting-type-icon-box {
+  width: 48px;
+  height: 48px;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.meeting-type-icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* TITLE */
+.meeting-type-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+ 

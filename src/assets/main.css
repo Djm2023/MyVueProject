@@ -1,0 +1,16 @@
+
+.bg-custom-blue {
+  background: #dbeafe; /* Tailwind blue-50 */
+}
+
+.bg-custom-emerald {
+  background: #d1fae5; /* Tailwind emerald-100 */
+}
+
+.bg-custom-yellow {
+  background: #fef9c3; /* Tailwind yellow-100 */
+}
+
+.bg-custom-purple {
+  background: #f3e8ff; /* Tailwind purple-100 */
+}

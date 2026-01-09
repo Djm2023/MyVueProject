@@ -1,0 +1,60 @@
+/* Wrapper */
+.schedule-meeting-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+/* Header Title */
+.schedule-meeting-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #0f172a; /* slate-900 */
+}
+
+/* Subheading */
+.schedule-meeting-subtitle {
+  margin-top: 8px;
+  color: #475569; /* slate-600 */
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Meeting Types Section */
+.schedule-meeting-types {
+  margin-top: 40px;
+}
+
+/* Footer Bar */
+.schedule-meeting-footer {
+  margin-top: 50px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0; /* slate-200 */
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Next Button */
+.schedule-meeting-next-btn {
+  padding: 12px 28px;
+  background: #0f172a; /* slate-900 */
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.25s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.schedule-meeting-next-btn:hover {
+  background: #1e293b; /* slightly darker */
+}
+
+.schedule-meeting-next-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
