@@ -41,7 +41,7 @@
           <div class="meeting-schedule-grid-3">
             <div class="field-wrapper">
               <label class="meeting-schedule-label">Choose a client</label>
-              <select
+              <select v-if="!isGenMeeting"
                 v-model="selectedClient"
                 :class="[
                   'meeting-schedule-input',
@@ -56,9 +56,64 @@
                   {{ lawyer.id }} - {{ lawyer.name }}
                 </option>
               </select>
-              <p v-if="errors.selectedClient" class="error-text">
+
+              <!-- <p v-if="errors.selectedClient" class="error-text">
                 {{ errors.selectedClient }}
-              </p>
+              </p> -->
+              <div  v-if="isGenMeeting" class="multi-select-wrapper" ref="clientBox">
+                <input
+                  type="text"
+                  v-model="searchClient"
+                  @focus="showClientDropdown = true"
+                  placeholder="Search client..."
+                  :class="[
+                    'meeting-schedule-input',
+                    errors.selectedClient ? 'error-input' : '',
+                  ]"
+                />
+
+                <div v-if="showClientDropdown" class="dropdown-panel">
+                  <div
+                    v-for="lawyer in filteredClientList"
+                    :key="lawyer.id"
+                    class="dropdown-item"
+                    @click="toggleClientSelect(lawyer)"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="isClientSelected(lawyer)"
+                    />
+                    {{ lawyer.name }}
+                  </div>
+
+                  <div
+                    v-if="searchClient && !clientExists"
+                    class="dropdown-item add-new-item"
+                    @click="addNewClient"
+                  >
+                    + Add Client: "{{ searchClient }}"
+                  </div>
+                </div>
+
+                <!-- <div class="selected-chips">
+                  <span
+                    v-for="lawyer in selectedClient"
+                    :key="lawyer.id"
+                    class="chip"
+                  >
+                    {{ lawyer.name }}
+                    <span
+                      class="chip-close"
+                      @click="removeSelectedClient(lawyer)"
+                      >×</span
+                    >
+                  </span>
+                </div> -->
+
+                <p v-if="errors.selectedClient" class="error-text">
+                  {{ errors.selectedClient }}
+                </p>
+              </div>
             </div>
 
             <div class="field-wrapper">
@@ -101,7 +156,10 @@
                 class="attendee-chip-inline"
                 :style="{ backgroundColor: attendeeColors[index] }"
               >
-                {{ person }}
+                {{ person?.name }}
+                <span class="attendee-remove" @click="removeAttendee(person)"
+                  >×</span
+                >
               </span>
             </span>
           </div>
@@ -127,14 +185,30 @@
 
             <div class="field-wrapper">
               <label class="meeting-schedule-label">Start Time</label>
-              <input
-                type="time"
-                v-model="startTime"
-                :class="[
-                  'meeting-schedule-input',
-                  errors.startTime ? 'error-input' : '',
-                ]"
-              />
+              <div class="time-picker-container" ref="startPicker">
+                <!-- Input box -->
+                <input
+                  type="text"
+                  class="time-input"
+                  v-model="startTime"
+                  @focus="openStartDropdown"
+                  @click="openStartDropdown"
+                  @input="filterStartTimes"
+                  placeholder="HH:MM"
+                />
+
+                <!-- Dropdown -->
+                <ul v-if="showStartDropdown" class="time-dropdown">
+                  <li
+                    v-for="t in filteredStartTimes"
+                    :key="t"
+                    class="time-option"
+                    @click="selectStartTime(t)"
+                  >
+                    {{ t }}
+                  </li>
+                </ul>
+              </div>
               <p v-if="errors.startTime" class="error-text">
                 {{ errors.startTime }}
               </p>
@@ -142,14 +216,28 @@
 
             <div class="field-wrapper">
               <label class="meeting-schedule-label">End Time</label>
-              <input
-                type="time"
-                v-model="endTime"
-                :class="[
-                  'meeting-schedule-input',
-                  errors.endTime ? 'error-input' : '',
-                ]"
-              />
+              <div class="time-picker-container" ref="endPicker">
+                <input
+                  type="text"
+                  class="time-input"
+                  v-model="endTime"
+                  @focus="openEndDropdown"
+                  @click="openEndDropdown"
+                  @input="filterEndTimes"
+                  placeholder="HH:MM"
+                />
+
+                <ul v-if="showEndDropdown" class="time-dropdown">
+                  <li
+                    v-for="t in filteredEndTimes"
+                    :key="'end-' + t"
+                    class="time-option"
+                    @click="selectEndTime(t)"
+                  >
+                    {{ t }}
+                  </li>
+                </ul>
+              </div>
               <p v-if="errors.endTime" class="error-text">
                 {{ errors.endTime }}
               </p>
@@ -248,13 +336,209 @@ import { getRandomChipColor } from "../utils/randomChipColor";
 import { dummyLawyers } from "../dummyData/allLawyers";
 import "../assets/styles/MeetingDetails.css";
 
+// export default {
+//   name: "MeetingDetails",
+//   components: { DatePicker },
+//   data() {
+//     return {
+//       meetTitle: "",
+//       selectedClient: "",
+//       selectedLawyer: "",
+//       appointmentDate: "",
+//       startTime: "",
+//       endTime: "",
+//       paymentStatus: "",
+//       amount: "",
+//       errors: {},
+//       lawyerList: dummyLawyers,
+//       blockedDates: ["2026-01-20", "2026-01-22", "2026-01-25"],
+//       attendeeList: [
+//         "Devjyoti Mukherjee",
+//         "Mahesh Chhetri",
+//         "Souvik Sarkar",
+//         "Pallab Adhikary",
+//         "Mainak Bhattacharya",
+//       ],
+//       attendeeColors: [],
+
+//       startDisplay: "",
+//       endDisplay: "",
+//       showStartDropdown: false,
+//       // filteredStartTimes: [],
+//       showEndDropdown: false,
+
+//       timeSlots: Array.from({ length: 48 }, (_, i) => {
+//         const hour = String(Math.floor(i / 2)).padStart(2, "0");
+//         const minute = i % 2 === 0 ? "00" : "30";
+//         return `${hour}:${minute}`;
+//       }),
+//     };
+//   },
+//   computed: {
+//     meetingId() {
+//       if (this.$route.path.includes("general-meeting")) return 3;
+//       if (this.$route.path.includes("client-meeting")) return 2;
+//       if (this.$route.path.includes("client-consultation")) return 1;
+//       return null;
+//     },
+//     currentMeeting() {
+//       return (
+//         meetingTypes.find((m) => m.id === this.meetingId) || meetingTypes[0]
+//       );
+//     },
+//     isClientMeeting() {
+//       return this.meetingId === 2;
+//     },
+//     isGeneralMeeting() {
+//       return this.meetingId === 3;
+//     },
+//   },
+//   created() {
+//     this.attendeeColors = this.attendeeList.map(() => getRandomChipColor());
+//   },
+
+//   mounted() {
+//     document.addEventListener("click", this.handleClickOutside);
+//   },
+
+//   beforeDestroy() {
+//     document.removeEventListener("click", this.handleClickOutside);
+//   },
+
+//   methods: {
+//     disableBlockedDates(date) {
+//       const year = date.getFullYear();
+//       const month = String(date.getMonth() + 1).padStart(2, "0");
+//       const day = String(date.getDate()).padStart(2, "0");
+//       const formatted = `${year}-${month}-${day}`;
+//       const today = new Date();
+//       today.setHours(0, 0, 0, 0);
+//       return this.blockedDates.includes(formatted) || date < today;
+//     },
+
+//     validateStartTime() {
+//       if (!/^\d{0,2}:?\d{0,2}$/.test(this.startTime)) return;
+
+//       if (this.startTime.length === 5 && /^\d{2}:\d{2}$/.test(this.startTime)) {
+//         const [h, m] = this.startTime.split(":");
+//         if (+h <= 23 && +m <= 59) return;
+//       }
+//     },
+
+//     openStartDropdown() {
+//       this.filteredStartTimes = this.timeSlots;
+//       this.showStartDropdown = true;
+//     },
+
+//     filterStartTimes() {
+//       const val = this.startTime.trim();
+//       this.showStartDropdown = true;
+
+//       if (!val) {
+//         this.filteredStartTimes = this.timeSlots;
+//         return;
+//       }
+
+//       this.filteredStartTimes = this.timeSlots.filter((t) => t.startsWith(val));
+//     },
+
+//     selectStartTime(t) {
+//       this.startTime = t;
+//       this.showStartDropdown = false;
+//     },
+
+//     /* ---------------- END TIME ---------------- */
+//     openEndDropdown() {
+//       this.filteredEndTimes = this.timeSlots;
+//       this.showEndDropdown = true;
+//     },
+
+//     filterEndTimes() {
+//       const val = this.endTime.trim();
+//       this.showEndDropdown = true;
+
+//       if (!val) {
+//         this.filteredEndTimes = this.timeSlots;
+//         return;
+//       }
+
+//       this.filteredEndTimes = this.timeSlots.filter((t) => t.startsWith(val));
+//     },
+
+//     selectEndTime(t) {
+//       this.endTime = t;
+//       this.showEndDropdown = false;
+//     },
+
+//     /* ---------------- CLICK OUTSIDE TO CLOSE ---------------- */
+
+//     handleClickOutside(event) {
+//       if (
+//         this.$refs.startPicker &&
+//         !this.$refs.startPicker.contains(event.target)
+//       ) {
+//         this.showStartDropdown = false;
+//       }
+
+//       if (
+//         this.$refs.endPicker &&
+//         !this.$refs.endPicker.contains(event.target)
+//       ) {
+//         this.showEndDropdown = false;
+//       }
+//     },
+
+//     validateForm() {
+//       const errors = {};
+//       if (this.isClientMeeting || this.isGeneralMeeting) {
+//         if (!this.meetTitle) errors.meetTitle = "Title is required";
+//       }
+//       if (!this.selectedClient) errors.selectedClient = "Client is required";
+//       if (!this.selectedLawyer) errors.selectedLawyer = "Lawyer is required";
+//       if (!this.appointmentDate) errors.appointmentDate = "Date required";
+//       if (!this.startTime) errors.startTime = "Start time required";
+//       if (!this.endTime) errors.endTime = "End time required";
+//       if (!this.amount) errors.amount = "Amount is required";
+//       if (!this.paymentStatus) errors.paymentStatus = "Select payment status";
+
+//       this.errors = errors;
+//       return Object.keys(errors).length === 0;
+//     },
+
+//     goNext() {
+//       if (!this.validateForm()) return;
+//       this.$router.push({
+//         path: "/schedule-meeting/client-consultation/mode",
+//         query: {
+//           client: this.selectedClient,
+//           lawyer: this.selectedLawyer,
+//           title: this.meetTitle,
+//           date: this.appointmentDate,
+//           start: this.startTime,
+//           end: this.endTime,
+//           amount: this.amount,
+//           status: this.paymentStatus,
+//           attendeeList: this.attendeeList,
+//         },
+//       });
+//     },
+
+//   },
+// };
+
 export default {
   name: "MeetingDetails",
   components: { DatePicker },
+
   data() {
     return {
       meetTitle: "",
-      selectedClient: "",
+      isGenMeeting: false,
+      // MULTISELECT UPDATED
+      selectedClient: [], // was string, now array
+      searchClient: "",
+      showClientDropdown: false,
+
       selectedLawyer: "",
       appointmentDate: "",
       startTime: "",
@@ -262,18 +546,61 @@ export default {
       paymentStatus: "",
       amount: "",
       errors: {},
+
       lawyerList: dummyLawyers,
+
       blockedDates: ["2026-01-20", "2026-01-22", "2026-01-25"],
-      attendeeList: [
-        "Devjyoti Mukherjee",
-        "Mahesh Chhetri",
-        "Souvik Sarkar",
-        "Pallab Adhikary",
-        "Mainak Bhattacharya",
-      ],
+
+      attendeeList: [],
       attendeeColors: [],
+
+      startDisplay: "",
+      endDisplay: "",
+      showStartDropdown: false,
+      showEndDropdown: false,
+
+      timeSlots: Array.from({ length: 48 }, (_, i) => {
+        const hour = String(Math.floor(i / 2)).padStart(2, "0");
+        const minute = i % 2 === 0 ? "00" : "30";
+        return `${hour}:${minute}`;
+      }),
     };
   },
+
+  watch: {
+    isGeneralMeeting(newVal) {
+      this.isGenMeeting = newVal;
+    },
+    selectedClient: {
+      handler(newClients) {
+        const lawyerObject = this.selectedLawyer
+          ? { id: "lawyer", name: this.selectedLawyer }
+          : null;
+
+        this.attendeeList = [
+          ...newClients.map((c) => ({ id: c.id, name: c.name })),
+          ...(lawyerObject ? [lawyerObject] : []),
+        ];
+      },
+      deep: true,
+    },
+
+    selectedLawyer(newVal) {
+      const lawyerObject = newVal ? { id: "lawyer", name: newVal } : null;
+
+      this.attendeeList = [
+        ...this.selectedClient.map((c) => ({ id: c.id, name: c.name })),
+        ...(lawyerObject ? [lawyerObject] : []),
+      ];
+    },
+    attendeeList: {
+      handler(newVal) {
+        this.attendeeColors = newVal.map(() => getRandomChipColor());
+      },
+      deep: true,
+    },
+  },
+
   computed: {
     meetingId() {
       if (this.$route.path.includes("general-meeting")) return 3;
@@ -292,10 +619,35 @@ export default {
     isGeneralMeeting() {
       return this.meetingId === 3;
     },
+
+    // FOR ATTENDEE LIST
+    attendeeNames() {
+      const clients = this.selectedClient.map((c) => c.name);
+      const lawyer = this.selectedLawyer ? [this.selectedLawyer] : [];
+
+      return [...clients, ...lawyer];
+    },
+
+    // MULTISELECT FILTERING
+    filteredClientList() {
+      const q = this.searchClient.toLowerCase();
+      return this.lawyerList.filter((l) => l.name.toLowerCase().includes(q));
+    },
   },
+
   created() {
     this.attendeeColors = this.attendeeList.map(() => getRandomChipColor());
+    this.isGenMeeting = this.isGeneralMeeting;
   },
+
+  mounted() {
+    document.addEventListener("click", this.handleClickOutside);
+  },
+
+  beforeDestroy() {
+    document.removeEventListener("click", this.handleClickOutside);
+  },
+
   methods: {
     disableBlockedDates(date) {
       const year = date.getFullYear();
@@ -306,12 +658,132 @@ export default {
       today.setHours(0, 0, 0, 0);
       return this.blockedDates.includes(formatted) || date < today;
     },
+
+    validateStartTime() {
+      if (!/^\d{0,2}:?\d{0,2}$/.test(this.startTime)) return;
+
+      if (this.startTime.length === 5 && /^\d{2}:\d{2}$/.test(this.startTime)) {
+        const [h, m] = this.startTime.split(":");
+        if (+h <= 23 && +m <= 59) return;
+      }
+    },
+
+    openStartDropdown() {
+      this.filteredStartTimes = this.timeSlots;
+      this.showStartDropdown = true;
+    },
+
+    filterStartTimes() {
+      const val = this.startTime.trim();
+      this.showStartDropdown = true;
+
+      if (!val) {
+        this.filteredStartTimes = this.timeSlots;
+        return;
+      }
+
+      this.filteredStartTimes = this.timeSlots.filter((t) => t.startsWith(val));
+    },
+
+    selectStartTime(t) {
+      this.startTime = t;
+      this.showStartDropdown = false;
+    },
+
+    openEndDropdown() {
+      this.filteredEndTimes = this.timeSlots;
+      this.showEndDropdown = true;
+    },
+
+    filterEndTimes() {
+      const val = this.endTime.trim();
+      this.showEndDropdown = true;
+
+      if (!val) {
+        this.filteredEndTimes = this.timeSlots;
+        return;
+      }
+
+      this.filteredEndTimes = this.timeSlots.filter((t) => t.startsWith(val));
+    },
+
+    selectEndTime(t) {
+      this.endTime = t;
+      this.showEndDropdown = false;
+    },
+
+    /* ---------------- MULTISELECT LOGIC ---------------- */
+
+    isClientSelected(lawyer) {
+      return this.selectedClient.some((c) => c.id === lawyer.id);
+    },
+
+    toggleClientSelect(lawyer) {
+      if (this.isClientSelected(lawyer)) {
+        this.selectedClient = this.selectedClient.filter(
+          (c) => c.id !== lawyer.id
+        );
+      } else {
+        this.selectedClient.push(lawyer);
+      }
+
+      // Update validation
+      if (this.selectedClient.length === 0) {
+        this.errors.selectedClient = "Client is required";
+      } else {
+        this.errors.selectedClient = "";
+      }
+    },
+
+    removeSelectedClient(lawyer) {
+      this.selectedClient = this.selectedClient.filter(
+        (c) => c.id !== lawyer.id
+      );
+
+      if (this.selectedClient.length === 0) {
+        this.errors.selectedClient = "Client is required";
+      }
+    },
+
+    /* ---------------- CLICK OUTSIDE TO CLOSE ---------------- */
+
+    handleClickOutside(event) {
+      if (
+        this.$refs.startPicker &&
+        !this.$refs.startPicker.contains(event.target)
+      ) {
+        this.showStartDropdown = false;
+      }
+
+      if (
+        this.$refs.endPicker &&
+        !this.$refs.endPicker.contains(event.target)
+      ) {
+        this.showEndDropdown = false;
+      }
+
+      // Close client dropdown
+      if (
+        this.$refs.clientBox &&
+        !this.$refs.clientBox.contains(event.target)
+      ) {
+        this.showClientDropdown = false;
+      }
+    },
+
+    /* ---------------- VALIDATION ---------------- */
+
     validateForm() {
       const errors = {};
+
       if (this.isClientMeeting || this.isGeneralMeeting) {
         if (!this.meetTitle) errors.meetTitle = "Title is required";
       }
-      if (!this.selectedClient) errors.selectedClient = "Client is required";
+
+      // Updated for array
+      if (this.selectedClient.length === 0)
+        errors.selectedClient = "Client is required";
+
       if (!this.selectedLawyer) errors.selectedLawyer = "Lawyer is required";
       if (!this.appointmentDate) errors.appointmentDate = "Date required";
       if (!this.startTime) errors.startTime = "Start time required";
@@ -322,12 +794,53 @@ export default {
       this.errors = errors;
       return Object.keys(errors).length === 0;
     },
+
+    /* ADD CLIENT  */
+    addNewClient() {
+      const newClient = {
+        id: Date.now(), // unique ID
+        name: this.searchClient.trim(),
+      };
+
+      // Add to list
+      this.lawyerList.push(newClient);
+
+      // Select it
+      this.selectedClient.push(newClient);
+
+      // Clear field
+      this.searchClient = "";
+      this.showClientDropdown = false;
+
+      // Clear errors if existed
+      this.errors.selectedClient = "";
+    },
+
+    // REMOVE ATTENDEE
+
+    removeAttendee(attendee) {
+      // Remove from attendeeList
+      this.attendeeList = this.attendeeList.filter((a) => a.id !== attendee.id);
+
+      // If removing a client
+      this.selectedClient = this.selectedClient.filter(
+        (c) => c.id !== attendee.id
+      );
+
+      // If removing lawyer
+      if (attendee.id === "lawyer") {
+        this.selectedLawyer = "";
+      }
+    },
+    /* ---------------- NEXT PAGE ---------------- */
+
     goNext() {
       if (!this.validateForm()) return;
+
       this.$router.push({
         path: "/schedule-meeting/client-consultation/mode",
         query: {
-          client: this.selectedClient,
+          client: JSON.stringify(this.selectedClient),
           lawyer: this.selectedLawyer,
           title: this.meetTitle,
           date: this.appointmentDate,
@@ -336,6 +849,7 @@ export default {
           amount: this.amount,
           status: this.paymentStatus,
           attendeeList: this.attendeeList,
+          isGenMeeting: this.isGenMeeting ? "true" : "false",
         },
       });
     },
@@ -418,4 +932,122 @@ export default {
 }
 
 /* --- END DATEPICKER STYLING --- */
+
+/* CLIENT AND LAWYER DROPDOWN AND MULTISELECT STARTS HERE  */
+/* Wrapper */
+.multi-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Search input */
+.multi-select-wrapper input.meeting-schedule-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.multi-select-wrapper input.meeting-schedule-input:focus {
+  border-color: #1976d2;
+}
+
+/* Dropdown panel */
+.dropdown-panel {
+  position: absolute;
+  top: 48px;
+  left: 0;
+  width: 100%;
+  max-height: 220px; /* FIXED HEIGHT */
+  overflow-y: auto; /* SCROLLBAR */
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  z-index: 9999;
+  padding: 6px 0;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Dropdown items */
+.dropdown-item {
+  padding: 8px 12px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease-in-out;
+}
+
+.dropdown-item input {
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background: #f5f7fa;
+}
+
+/* Empty result message */
+.no-result {
+  padding: 10px;
+  text-align: center;
+  color: #777;
+}
+
+.add-new-item {
+  padding: 8px 12px;
+  font-size: 14px;
+  background: #e8f4ff;
+  color: #005dbb;
+  cursor: pointer;
+  border-top: 1px solid #ddd;
+}
+
+.add-new-item:hover {
+  background: #d6ebff;
+}
+
+/* Selected chips */
+.selected-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.chip {
+  background: #e8eef5;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  border: 1px solid #cdd5df;
+}
+
+.chip-close {
+  margin-left: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #333;
+}
+
+.chip-close:hover {
+  color: #d32f2f;
+}
+
+/* Error message */
+.error-text {
+  color: #d32f2f;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+/* Error border */
+.error-input {
+  border-color: #d32f2f !important;
+}
 </style>

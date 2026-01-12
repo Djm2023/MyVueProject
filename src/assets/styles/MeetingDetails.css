@@ -266,20 +266,31 @@
 }
 
 .attendee-value {
-  font-size: 14px;
+  font-size: 16px;
   color: #334155;
   line-height: 1.5;
   flex: 1;
-  word-break: break-word; /* wraps long names properly */
+  word-break: break-word; 
+  font-weight: 500;
 }
 .attendee-chip-inline {
   display: inline-block;
-  padding: 4px 10px;
+  padding: 4px 14px;
   border-radius: 14px;
-  font-size: 13px;
+  font-size: 16px;
   margin-right: 6px;
   margin-bottom: 6px;
   white-space: nowrap;
+}
+.attendee-remove {
+  margin-left: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #d30000;
+}
+
+.attendee-remove:hover {
+  color: #900000;
 }
 
 .meeting-schedule-radio-group {
@@ -304,6 +315,58 @@
 }
 .error-title{
   margin-left: 50px !important;
+}
+
+
+/* FOR START AND END TIME  */
+
+.time-picker-container {
+  position: relative;
+  width: 100%;            /* Make width same as other fields */
+}
+
+.time-input {
+  width: 100%;            /* Full width input */
+  height: 42px;           /* Match height of your other .meeting-schedule-input */
+  padding: 0 12px;
+  font-size: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  box-sizing: border-box;
+}
+
+.time-input:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+/* Dropdown styling */
+.time-dropdown {
+  position: absolute;
+  top: 45px;              /* Align dropdown just below input */
+  left: 0;
+  width: 100%;
+  max-height: 180px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 9999;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.time-option {
+  padding: 10px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.time-option:hover {
+  background-color: #e2e8f0;
 }
 
 /* Responsive */

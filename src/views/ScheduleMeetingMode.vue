@@ -1,6 +1,5 @@
 <template>
   <div class="meeting-mode-wrapper">
-
     <!-- HEADER -->
     <div class="meeting-mode-header">
       <h1>Schedule Consultation</h1>
@@ -10,7 +9,6 @@
     <div class="meeting-mode-container">
       <!-- LEFT FORM -->
       <div class="meeting-mode-card">
-
         <h2 class="card-title">Mode of Meeting/Consultation</h2>
 
         <!-- MODE BUTTONS -->
@@ -41,12 +39,22 @@
         <div v-if="form.mode === 'phone'" class="form-section">
           <div>
             <label class="form-label">Call at *</label>
-            <textarea v-model="form.callAt" rows="1" class="form-input" readonly></textarea>
+            <textarea
+              v-model="form.callAt"
+              rows="2"
+              class="form-input"
+              readonly
+            ></textarea>
           </div>
 
           <div>
             <label class="form-label">Message</label>
-            <textarea v-model="form.message" rows="2" class="form-input" readonly></textarea>
+            <textarea
+              v-model="form.message"
+              rows="3"
+              class="form-input"
+              readonly
+            ></textarea>
           </div>
         </div>
 
@@ -56,7 +64,7 @@
             <label class="form-label">Meeting Link *</label>
             <textarea
               v-model="form.meetingLink"
-              rows="2"
+              rows="4"
               placeholder="https://meet.google.com/..."
               class="form-input"
             ></textarea>
@@ -64,7 +72,12 @@
 
           <div>
             <label class="form-label">Message</label>
-            <textarea v-model="form.message" rows="2" class="form-input" readonly></textarea>
+            <textarea
+              v-model="form.message"
+              rows="3"
+              class="form-input"
+              readonly
+            ></textarea>
           </div>
         </div>
 
@@ -77,7 +90,7 @@
             </label>
             <textarea
               v-model="form.lawyerAddress"
-              rows="2"
+              rows="4"
               class="form-input"
               :disabled="form.addressType !== 'lawyer'"
             ></textarea>
@@ -85,12 +98,16 @@
 
           <div>
             <label class="radio-label">
-              <input type="radio" value="alternate" v-model="form.addressType" />
+              <input
+                type="radio"
+                value="alternate"
+                v-model="form.addressType"
+              />
               <span>Alternate Address</span>
             </label>
             <textarea
               v-model="form.alternateAddress"
-              rows="2"
+              rows="4"
               class="form-input"
               :disabled="form.addressType !== 'alternate'"
             ></textarea>
@@ -98,10 +115,14 @@
 
           <div>
             <label class="form-label">Message</label>
-            <textarea v-model="form.message" rows="2" class="form-input" readonly></textarea>
+            <textarea
+              v-model="form.message"
+              rows="3"
+              class="form-input"
+              readonly
+            ></textarea>
           </div>
         </div>
-
       </div>
 
       <!-- RIGHT SUMMARY -->
@@ -109,39 +130,41 @@
         <h3 class="summary-heading">Consultation Summary</h3>
 
         <div class="summary-grid">
-          <div class="item">
+          <div v-if="form.isGeneralMeeting" class="item">
             <span class="label">Title</span>
-            <span class="value">{{ form.title || '—' }}</span>
+            <span class="value">{{ form.title || "—" }}</span>
           </div>
 
           <div class="item">
             <span class="label">Client</span>
-            <span class="value">{{ form.clientName || '—' }}</span>
+            <span class="value">{{ form.clientName || "—" }}</span>
           </div>
 
           <div class="item">
             <span class="label">Lawyer</span>
-            <span class="value">{{ form.lawyerName || '—' }}</span>
+            <span class="value">{{ form.lawyerName || "—" }}</span>
           </div>
 
           <div class="item">
             <span class="label">Date</span>
-            <span class="value">{{ form.date || '—' }}</span>
+            <span class="value">{{ form.date || "—" }}</span>
           </div>
 
           <div class="item">
             <span class="label">Time</span>
-            <span class="value">{{ form.startTime || '—' }} - {{ form.endTime || '—' }}</span>
+            <span class="value"
+              >{{ form.startTime || "—" }} - {{ form.endTime || "—" }}</span
+            >
           </div>
 
           <div class="item">
             <span class="label">Amount</span>
-            <span class="value">₹ {{ form.fees || '—' }}</span>
+            <span class="value">₹ {{ form.fees || "—" }}</span>
           </div>
 
           <div class="item">
             <span class="label">Status</span>
-            <span class="status">{{ form.paymentStatus || '—' }}</span>
+            <span class="status">{{ form.paymentStatus || "—" }}</span>
           </div>
 
           <div class="item">
@@ -152,16 +175,59 @@
 
         <div class="summary-actions-mini">
           <button class="btn-outline" @click="$router.back()">Back</button>
-          <button class="btn-primary">Review and Confirm</button>
+          <button class="btn-primary" @click="showReviewModal = true">
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showReviewModal" class="modal-overlay">
+      <div class="modal-content">
+        <!-- Close Button -->
+        <button class="modal-close" @click="showReviewModal = false">X</button>
+
+        <!-- Heading -->
+        <h2 class="modal-title">Review and Confirm</h2>
+
+        <!-- Body -->
+        <div class="modal-body">
+          <div v-if="form.isGeneralMeeting" class="modal-row">
+            <strong>Title : </strong> {{ form.title }}
+          </div>
+
+          <div class="modal-row">
+            <strong>Client : </strong> {{ form.clientName }}
+          </div>
+          <div class="modal-row">
+            <strong>Lawyer : </strong> {{ form.lawyerName }}
+          </div>
+          <div class="modal-row"><strong>Date:</strong> {{ form.date }}</div>
+          <div class="modal-row">
+            <strong>Time : </strong> {{ form.startTime }} - {{ form.endTime }}
+          </div>
+          <div class="modal-row">
+            <strong>Amount : </strong> ₹ {{ form.fees }}
+          </div>
+          <div class="modal-row">
+            <strong>Payment Status : </strong> {{ form.paymentStatus }}
+          </div>
+          <div class="modal-row"><strong>Mode : </strong> {{ form.mode }}</div>
         </div>
 
+        <!-- Buttons -->
+        <div class="modal-actions">
+          <button class="modal-confirm-btn" @click="confirmBooking">
+            Review and Confirm
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import '../assets/styles/ScheduleMeetingMode.css'
+import "../assets/styles/ScheduleMeetingMode.css";
 
 export default {
   name: "ScheduleMeetingMode",
@@ -170,6 +236,10 @@ export default {
     return {
       SUPPORT_NUMBER: "+91 7604047602",
 
+      // Modal visibility flag
+      showReviewModal: false,
+
+      // Existing form data (unchanged)
       form: {
         mode: "phone",
         title: "",
@@ -185,44 +255,72 @@ export default {
         lawyerAddress: "",
         alternateAddress: "",
         message: "",
-        paymentStatus: ""
-      }
-    }
+        paymentStatus: "",
+        isGeneralMeeting: false,
+      },
+    };
+  },
+
+  // ADD THIS PART – It was missing and causing modal not to reopen
+  methods: {
+    confirmBooking() {
+      // Your confirm logic can go here (API, navigation etc.)
+      alert("Booking Confirmed!");
+
+      // Close modal after confirm
+      this.showReviewModal = false;
+    },
   },
 
   created() {
-    const q = this.$route.query
+    const q = this.$route.query;
 
-    this.form.clientName = q.client || ""
-    this.form.lawyerName = q.lawyer || ""
-    this.form.date = q.date || ""
-    this.form.startTime = q.start || ""
-    this.form.endTime = q.end || ""
-    this.form.fees = q.amount || ""
-    this.form.paymentStatus = q.status || ""
-    this.form.title = q.title || ""
+    if (q.client) {
+      try {
+        const parsedClient = JSON.parse(q.client);
 
-    this.form.message = `In case you are not able to connect call at ${this.SUPPORT_NUMBER}`
+        if (Array.isArray(parsedClient)) {
+          // Extract only names
+          this.form.clientName = parsedClient.map((c) => c.name).join(", ");
+        } else {
+          this.form.clientName = parsedClient.name || "";
+        }
+      } catch (err) {
+        // If client is not JSON, use as is
+        this.form.clientName = q.client;
+      }
+    }
+
+    this.form.lawyerName = q.lawyer || "";
+    this.form.date = q.date || "";
+    this.form.startTime = q.start || "";
+    this.form.endTime = q.end || "";
+    this.form.fees = q.amount || "";
+    this.form.paymentStatus = q.status || "";
+    this.form.title = q.title || "";
+    this.form.isGeneralMeeting = q.isGenMeeting === "true";
+
+    this.form.message = `In case you are not able to connect call at ${this.SUPPORT_NUMBER}`;
   },
 
   watch: {
     "form.mode"(mode) {
       if (mode === "phone") {
-        this.form.callAt = "+91 9902113552"
+        this.form.callAt = "+91 9902113552";
       }
 
       if (mode === "video") {
-        this.form.meetingLink = ""
+        this.form.meetingLink = "";
       }
 
       if (mode === "in-person") {
-        this.form.addressType = "lawyer"
-        this.form.lawyerAddress = ""
-        this.form.alternateAddress = ""
+        this.form.addressType = "lawyer";
+        this.form.lawyerAddress = "";
+        this.form.alternateAddress = "";
       }
 
-      this.form.message = `In case you are not able to connect call at ${this.SUPPORT_NUMBER}`
-    }
-  }
-}
+      this.form.message = `In case you are not able to connect call at ${this.SUPPORT_NUMBER}`;
+    },
+  },
+};
 </script>

@@ -19,27 +19,32 @@ export default new Router({
     {
       path: '/schedule-meeting',
       name: 'ScheduleMeeting',
-      component: ScheduleMeeting
+      component: ScheduleMeeting,
+      meta: { keepAlive: true }
     },
     {
       path: '/schedule-meeting/client-consultation',
       name: 'ClientConsultation',
-      component: MeetingDetails
+      component: MeetingDetails,
+      meta: { keepAlive: true }
     },
     {
       path: '/schedule-meeting/client-consultation/mode',
       name: 'ScheduleConsultation',
-      component: ScheduleConsultation
+      component: ScheduleConsultation,
+      meta: { keepAlive: true }
     },
     {
       path: '/schedule-meeting/client-meeting',
       name: 'ClientMeeting',
-      component: MeetingDetails
+      component: MeetingDetails,
+      meta: { keepAlive: true }
     },
     {
       path: '/schedule-meeting/general-meeting',
       name: 'GeneralMeeting',
-      component: MeetingDetails
+      component: MeetingDetails,
+      meta: { keepAlive: true }
     }
   ]
 })
