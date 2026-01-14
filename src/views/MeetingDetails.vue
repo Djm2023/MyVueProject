@@ -41,76 +41,38 @@
           <div class="meeting-schedule-grid-3">
             <div class="field-wrapper">
               <label class="meeting-schedule-label">Choose a client</label>
-              <select
-                v-if="!isGenMeeting"
-                v-model="singleSelectedClient"
-                class="meeting-schedule-input"
-              >
-                <option
-                  v-for="lawyer in lawyerList"
-                  :key="lawyer.id"
-                  :value="lawyer"
-                >
-                  {{ lawyer.id }} - {{ lawyer.name }}
-                </option>
-              </select>
-
-              <!-- <p v-if="errors.selectedClient" class="error-text">
-                {{ errors.selectedClient }}
-              </p> -->
-              <div
-                v-if="isGenMeeting"
-                class="multi-select-wrapper"
-                ref="clientBox"
-              >
+              <!-- SEARCHABLE SELECT (GEN MEETING) -->
+              <div class="multi-select-wrapper" ref="clientBox">
+                <!-- Search Field -->
                 <input
                   type="text"
-                  v-model="searchClient"
-                  @focus="showClientDropdown = true"
+                  :value="selectedClientName"
+                  @focus="openDropdown"
+                  @input="onSearchInput"
                   placeholder="Search client..."
-                  :class="[
-                    'meeting-schedule-input',
-                    errors.selectedClient ? 'error-input' : '',
-                  ]"
+                  class="meeting-schedule-input"
                 />
 
+                <!-- Dropdown Panel -->
                 <div v-if="showClientDropdown" class="dropdown-panel">
+                  <!-- Options -->
                   <div
                     v-for="lawyer in filteredClientList"
                     :key="lawyer.id"
                     class="dropdown-item"
-                    @click="toggleClientSelect(lawyer)"
+                    @click="selectClient(lawyer)"
                   >
-                    <input
-                      type="checkbox"
-                      :checked="isClientSelected(lawyer)"
-                    />
                     {{ lawyer.name }}
                   </div>
 
+                  <!-- Add New Client -->
                   <div
-                    v-if="searchClient && !clientExists"
-                    class="dropdown-item add-new-item"
-                    @click="addNewClient"
+                    v-if="filteredClientList.length === 0"
+                    class="dropdown-item no-result"
                   >
-                    + Add Client: "{{ searchClient }}"
+                    No Result found
                   </div>
                 </div>
-
-                <!-- <div class="selected-chips">
-                  <span
-                    v-for="lawyer in selectedClient"
-                    :key="lawyer.id"
-                    class="chip"
-                  >
-                    {{ lawyer.name }}
-                    <span
-                      class="chip-close"
-                      @click="removeSelectedClient(lawyer)"
-                      >×</span
-                    >
-                  </span>
-                </div> -->
 
                 <p v-if="errors.selectedClient" class="error-text">
                   {{ errors.selectedClient }}
@@ -120,21 +82,42 @@
 
             <div class="field-wrapper">
               <label class="meeting-schedule-label">Choose Lawyer</label>
-              <select
-                v-model="selectedLawyer"
-                :class="[
-                  'meeting-schedule-input',
-                  errors.selectedLawyer ? 'error-input' : '',
-                ]"
-              >
-                <option
-                  v-for="lawyer in lawyerList"
-                  :key="lawyer.id"
-                  :value="lawyer"
-                >
-                  {{ lawyer.id }} - {{ lawyer.name }}
-                </option>
-              </select>
+
+              <div class="multi-select-wrapper" ref="lawyerBox">
+                <input
+                  type="text"
+                  :value="selectedLawyerName"
+                  @focus="openLawyerDropdown"
+                  @input="onSearchLawyerInput"
+                  placeholder="Search lawyer..."
+                  :class="[
+                    'meeting-schedule-input',
+                    errors.selectedLawyer ? 'error-input' : '',
+                  ]"
+                />
+
+                <!-- Dropdown -->
+                <div v-if="showLawyerDropdown" class="dropdown-panel">
+                  <!-- Lawyer List -->
+                  <div
+                    v-for="lawyer in filteredLawyerList"
+                    :key="lawyer.id"
+                    class="dropdown-item"
+                    @click="selectLawyer(lawyer)"
+                  >
+                    {{ lawyer.name }}
+                  </div>
+
+                  <!-- No Result Found -->
+                  <div
+                    v-if="filteredLawyerList.length === 0"
+                    class="dropdown-item no-result"
+                  >
+                    No Result Found
+                  </div>
+                </div>
+              </div>
+
               <p v-if="errors.selectedLawyer" class="error-text">
                 {{ errors.selectedLawyer }}
               </p>
@@ -365,12 +348,18 @@ export default {
 
   data() {
     return {
+      clientList: [], // list of clients
+      lawyerList: [],
+
       meetTitle: "",
       isGenMeeting: false,
+
       // MULTISELECT UPDATED
-      selectedClient: [], // was string, now array
+      selectedClient: null, // was string, now array
       searchClient: "",
+      searchLawyer: "", // FIX ADDED
       showClientDropdown: false,
+      showLawyerDropdown: false, // FIX ADDED
 
       singleSelectedClient: null,
 
@@ -379,10 +368,7 @@ export default {
       startTime: "",
       endTime: "",
       paymentStatus: "",
-      // amount: "",
       errors: {},
-
-      lawyerList: dummyLawyers,
 
       blockedDates: ["2026-01-20", "2026-01-22", "2026-01-25"],
 
@@ -393,6 +379,9 @@ export default {
       endDisplay: "",
       showStartDropdown: false,
       showEndDropdown: false,
+
+      filteredStartTimes: [], // FIX ADDED
+      filteredEndTimes: [], // FIX ADDED
 
       currency: "Rs",
       amount: "",
@@ -405,49 +394,14 @@ export default {
     };
   },
 
-  // watch: {
-  //   isGeneralMeeting(newVal) {
-  //     this.isGenMeeting = newVal;
-  //   },
-  //   selectedClient: {
-  //     handler(newClients) {
-  //       const lawyerObject = this.selectedLawyer
-  //         ? { id: "lawyer", name: this.selectedLawyer }
-  //         : null;
-
-  //       this.attendeeList = [
-  //         ...newClients.map((c) => ({ id: c.id, name: c.name })),
-  //         ...(lawyerObject ? [lawyerObject] : []),
-  //       ];
-  //     },
-  //     deep: true,
-  //   },
-
-  //   selectedLawyer(newVal) {
-  //     const lawyerObject = newVal ? { id: "lawyer", name: newVal } : null;
-
-  //     this.attendeeList = [
-  //       ...this.selectedClient.map((c) => ({ id: c.id, name: c.name })),
-  //       ...(lawyerObject ? [lawyerObject] : []),
-  //     ];
-  //   },
-  //   attendeeList: {
-  //     handler(newVal) {
-  //       this.attendeeColors = newVal.map(() => getRandomChipColor());
-  //     },
-  //     deep: true,
-  //   },
-  // },
-
   watch: {
     isGeneralMeeting(newVal) {
       this.isGenMeeting = newVal;
     },
 
-    // Multi-Select Mode (General Meeting)
     selectedClient: {
       handler(newClients) {
-        if (!this.isGeneralMeeting) return; // skip in single-select mode
+        if (!this.isGeneralMeeting) return;
 
         const list = Array.isArray(newClients) ? newClients : [];
 
@@ -466,7 +420,6 @@ export default {
       deep: true,
     },
 
-    // Single-Select Mode (Non-General Meeting)
     singleSelectedClient(newVal) {
       if (this.isGeneralMeeting) return;
 
@@ -485,7 +438,6 @@ export default {
         : [...(lawyerObject ? [lawyerObject] : [])];
     },
 
-    // Lawyer watcher works for both modes
     selectedLawyer(newVal) {
       const lawyerObject = newVal
         ? { id: "lawyer", name: newVal.name || newVal }
@@ -513,18 +465,43 @@ export default {
       this.attendeeColors = newVal.map(() => getRandomChipColor());
     },
   },
+
   computed: {
+    filteredClientList() {
+      if (!this.searchClient) return this.clientList;
+      return this.clientList.filter((c) =>
+        c.name.toLowerCase().includes(this.searchClient.toLowerCase())
+      );
+    },
+
+    selectedClientName() {
+      return this.selectedClient ? this.selectedClient.name : this.searchClient;
+    },
+
+    filteredLawyerList() {
+      if (!this.searchLawyer) return this.lawyerList;
+      return this.lawyerList.filter((l) =>
+        l.name.toLowerCase().includes(this.searchLawyer.toLowerCase())
+      );
+    },
+
+    selectedLawyerName() {
+      return this.selectedLawyer ? this.selectedLawyer.name : this.searchLawyer;
+    },
+
     meetingId() {
       if (this.$route.path.includes("general-meeting")) return 3;
       if (this.$route.path.includes("client-meeting")) return 2;
       if (this.$route.path.includes("client-consultation")) return 1;
       return null;
     },
+
     currentMeeting() {
       return (
         meetingTypes.find((m) => m.id === this.meetingId) || meetingTypes[0]
       );
     },
+
     isClientMeeting() {
       return this.meetingId === 2;
     },
@@ -532,18 +509,10 @@ export default {
       return this.meetingId === 3;
     },
 
-    // FOR ATTENDEE LIST
     attendeeNames() {
       const clients = this.selectedClient.map((c) => c.name);
       const lawyer = this.selectedLawyer ? [this.selectedLawyer] : [];
-
       return [...clients, ...lawyer];
-    },
-
-    // MULTISELECT FILTERING
-    filteredClientList() {
-      const q = this.searchClient.toLowerCase();
-      return this.lawyerList.filter((l) => l.name.toLowerCase().includes(q));
     },
 
     formattedAmount() {
@@ -558,6 +527,8 @@ export default {
 
   mounted() {
     document.addEventListener("click", this.handleClickOutside);
+    this.lawyerList = dummyLawyers;
+    this.clientList = dummyLawyers; // FIX ADDED for search to work
   },
 
   beforeDestroy() {
@@ -565,6 +536,51 @@ export default {
   },
 
   methods: {
+    openDropdown() {
+      this.showClientDropdown = true;
+    },
+
+    onSearchInput(event) {
+      this.searchClient = event.target.value;
+
+      if (
+        this.selectedClient &&
+        event.target.value !== this.selectedClient.name
+      ) {
+        this.selectedClient = null;
+      }
+
+      this.showClientDropdown = true;
+    },
+
+    selectClient(client) {
+      this.selectedClient = client;
+      this.searchClient = client.name;
+      this.showClientDropdown = false;
+    },
+
+    openLawyerDropdown() {
+      this.showLawyerDropdown = true;
+    },
+
+    onSearchLawyerInput(e) {
+      const value = e.target.value;
+
+      // If the typed value differs from selected lawyer's name, clear selection
+      if (this.selectedLawyer && value !== this.selectedLawyer.name) {
+        this.selectedLawyer = null;
+      }
+
+      this.searchLawyer = value;
+      this.showLawyerDropdown = true;
+    },
+
+    selectLawyer(lawyer) {
+      this.selectedLawyer = lawyer;
+      this.searchLawyer = lawyer.name;
+      this.showLawyerDropdown = false;
+    },
+
     disableBlockedDates(date) {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -573,15 +589,6 @@ export default {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       return this.blockedDates.includes(formatted) || date < today;
-    },
-
-    validateStartTime() {
-      if (!/^\d{0,2}:?\d{0,2}$/.test(this.startTime)) return;
-
-      if (this.startTime.length === 5 && /^\d{2}:\d{2}$/.test(this.startTime)) {
-        const [h, m] = this.startTime.split(":");
-        if (+h <= 23 && +m <= 59) return;
-      }
     },
 
     openStartDropdown() {
@@ -628,8 +635,6 @@ export default {
       this.showEndDropdown = false;
     },
 
-    /* ---------------- MULTISELECT LOGIC ---------------- */
-
     isClientSelected(lawyer) {
       return this.selectedClient.some((c) => c.id === lawyer.id);
     },
@@ -642,28 +647,29 @@ export default {
       } else {
         this.selectedClient.push(lawyer);
       }
-
-      // Update validation
-      if (this.selectedClient.length === 0) {
-        this.errors.selectedClient = "Client is required";
-      } else {
-        this.errors.selectedClient = "";
-      }
     },
 
     removeSelectedClient(lawyer) {
       this.selectedClient = this.selectedClient.filter(
         (c) => c.id !== lawyer.id
       );
-
-      if (this.selectedClient.length === 0) {
-        this.errors.selectedClient = "Client is required";
-      }
     },
 
-    /* ---------------- CLICK OUTSIDE TO CLOSE ---------------- */
-
     handleClickOutside(event) {
+      if (
+        this.$refs.clientBox &&
+        !this.$refs.clientBox.contains(event.target)
+      ) {
+        this.showClientDropdown = false;
+      }
+
+      if (
+        this.$refs.lawyerBox &&
+        !this.$refs.lawyerBox.contains(event.target)
+      ) {
+        this.showLawyerDropdown = false;
+      }
+
       if (
         this.$refs.startPicker &&
         !this.$refs.startPicker.contains(event.target)
@@ -677,17 +683,7 @@ export default {
       ) {
         this.showEndDropdown = false;
       }
-
-      // Close client dropdown
-      if (
-        this.$refs.clientBox &&
-        !this.$refs.clientBox.contains(event.target)
-      ) {
-        this.showClientDropdown = false;
-      }
     },
-
-    /* ---------------- VALIDATION ---------------- */
 
     validateForm() {
       const errors = {};
@@ -696,7 +692,6 @@ export default {
         if (!this.meetTitle) errors.meetTitle = "Title is required";
       }
 
-      // Updated for array
       if (this.isGeneralMeeting) {
         if (this.selectedClient.length === 0)
           errors.selectedClient = "Select at least one client";
@@ -709,63 +704,37 @@ export default {
       if (!this.appointmentDate) errors.appointmentDate = "Date required";
       if (!this.startTime) errors.startTime = "Start time required";
       if (!this.endTime) errors.endTime = "End time required";
+
       if (!this.isGeneralMeeting) {
         if (!this.amount) errors.amount = "Amount is required";
       }
+
       if (!this.isGeneralMeeting) {
         if (!this.paymentStatus) errors.paymentStatus = "Amount is required";
       }
-
-      // if (!this.paymentStatus) errors.paymentStatus = "Select payment status";
 
       this.errors = errors;
       return Object.keys(errors).length === 0;
     },
 
-    /* ADD CLIENT  */
-    addNewClient() {
-      const newClient = {
-        id: Date.now(), // unique ID
-        name: this.searchClient.trim(),
-      };
-
-      // Add to list
-      this.lawyerList.push(newClient);
-
-      // Select it
-      this.selectedClient.push(newClient);
-
-      // Clear field
-      this.searchClient = "";
-      this.showClientDropdown = false;
-
-      // Clear errors if existed
-      this.errors.selectedClient = "";
-    },
-
-    // REMOVE ATTENDEE
-
     removeAttendee(attendee) {
-      // Remove from attendeeList
       this.attendeeList = this.attendeeList.filter((a) => a.id !== attendee.id);
 
-      // If removing a client
       this.selectedClient = this.selectedClient.filter(
         (c) => c.id !== attendee.id
       );
 
-      // If removing lawyer
       if (attendee.id === "lawyer") {
         this.selectedLawyer = "";
       }
     },
-    /* ---------------- NEXT PAGE ---------------- */
 
     normalizeSingleClient() {
       if (!Array.isArray(this.selectedClient)) {
         this.selectedClient = [this.selectedClient];
       }
     },
+
     goNext() {
       if (!this.validateForm()) return;
 
@@ -924,24 +893,34 @@ export default {
   background: #f5f7fa;
 }
 
-/* Empty result message */
-.no-result {
-  padding: 10px;
-  text-align: center;
-  color: #777;
-}
-
-.add-new-item {
+/* .add-new-item {
   padding: 8px 12px;
   font-size: 14px;
-  background: #e8f4ff;
-  color: #005dbb;
+  margin: auto !important;
+  background: rgb(220, 212, 212);
+  color: grey;
   cursor: pointer;
   border-top: 1px solid #ddd;
 }
 
 .add-new-item:hover {
   background: #d6ebff;
+} */
+
+.no-result {
+  padding: 10px;
+  text-align: center;
+  color: #999;
+  background: #f3f3f3;
+  cursor: default;
+  font-style: italic;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.no-result:hover {
+  background: #e0e0e0; /* no hover change */
+  color: #888;
 }
 
 /* Selected chips */
