@@ -142,7 +142,7 @@
 
           <div class="item">
             <span class="label">Lawyer</span>
-            <span class="value">{{ form.lawyerName || "—" }}</span>
+            <span class="value">{{ form.lawyerName.name || "—" }}</span>
           </div>
 
           <div class="item">
@@ -157,14 +157,18 @@
             >
           </div>
 
-          <div class="item">
+          <div v-if="!form.isGeneralMeeting" class="item">
             <span class="label">Amount</span>
-            <span class="value">₹ {{ form.fees || "—" }}</span>
+            <span class="value"> {{ form.fees || "—" }}</span>
           </div>
 
-          <div class="item">
+          <div v-if="!form.isGeneralMeeting" class="item">
             <span class="label">Status</span>
-            <span class="status">{{ form.paymentStatus || "—" }}</span>
+            <span
+              :class="['status-chip', getPaymentChipClass(form.paymentStatus)]"
+            >
+              {{ form.paymentStatus || "—" }}
+            </span>
           </div>
 
           <div class="item">
@@ -200,18 +204,25 @@
             <strong>Client : </strong> {{ form.clientName }}
           </div>
           <div class="modal-row">
-            <strong>Lawyer : </strong> {{ form.lawyerName }}
+            <strong>Lawyer : </strong> {{ form.lawyerName.name }}
           </div>
           <div class="modal-row"><strong>Date:</strong> {{ form.date }}</div>
           <div class="modal-row">
             <strong>Time : </strong> {{ form.startTime }} - {{ form.endTime }}
           </div>
-          <div class="modal-row">
-            <strong>Amount : </strong> ₹ {{ form.fees }}
+          <div v-if="!form.isGeneralMeeting" class="modal-row">
+            <strong>Amount : </strong> {{ form.fees }}
           </div>
-          <div class="modal-row">
-            <strong>Payment Status : </strong> {{ form.paymentStatus }}
+          <div v-if="!form.isGeneralMeeting" class="modal-row">
+            <strong>Payment Status : </strong>
+
+            <span
+              :class="['status-chip', getPaymentChipClass(form.paymentStatus)]"
+            >
+              {{ form.paymentStatus || "—" }}
+            </span>
           </div>
+
           <div class="modal-row"><strong>Mode : </strong> {{ form.mode }}</div>
         </div>
 
@@ -223,11 +234,33 @@
         </div>
       </div>
     </div>
+
+    <!-- SUCCESS MODAL -->
+    <div v-if="showSuccessModal" class="modal-overlay">
+      <div class="modal-content success-modal">
+        <!-- Success Icon -->
+        <div class="success-header">
+          <div class="success-icon">✓</div>
+          <h2>Success</h2>
+        </div>
+
+        <!-- Message -->
+        <p class="success-message">Meeting scheduled successfully.</p>
+
+        <!-- OK Button -->
+        <div class="modal-actions">
+          <button class="modal-confirm-btn" @click="closeSuccessModal">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import "../assets/styles/ScheduleMeetingMode.css";
+import { getPaymentChipClass } from "../utils/paymentChip";
 
 export default {
   name: "ScheduleMeetingMode",
@@ -238,6 +271,7 @@ export default {
 
       // Modal visibility flag
       showReviewModal: false,
+      showSuccessModal: false,
 
       // Existing form data (unchanged)
       form: {
@@ -263,12 +297,21 @@ export default {
 
   // ADD THIS PART – It was missing and causing modal not to reopen
   methods: {
+    getPaymentChipClass,
     confirmBooking() {
-      // Your confirm logic can go here (API, navigation etc.)
-      alert("Booking Confirmed!");
-
-      // Close modal after confirm
+      // Close review modal
       this.showReviewModal = false;
+
+      console.log("All form =>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",this.form )
+
+      // Open success modal after slight delay
+      setTimeout(() => {
+        this.showSuccessModal = true;
+      }, 200);
+    },
+
+    closeSuccessModal() {
+      this.showSuccessModal = false;
     },
   },
 
@@ -291,7 +334,19 @@ export default {
       }
     }
 
-    this.form.lawyerName = q.lawyer || "";
+    if (q.lawyer) {
+      try {
+        const parsedLawyer = JSON.parse(q.lawyer);
+        this.form.lawyerName = parsedLawyer; // Store full object
+
+        if (parsedLawyer.address) {
+          this.form.lawyerAddress = parsedLawyer.address;
+        }
+      } catch (err) {
+        this.form.lawyerName = { name: q.lawyer }; // fallback object
+      }
+    }
+
     this.form.date = q.date || "";
     this.form.startTime = q.start || "";
     this.form.endTime = q.end || "";

@@ -41,17 +41,15 @@
           <div class="meeting-schedule-grid-3">
             <div class="field-wrapper">
               <label class="meeting-schedule-label">Choose a client</label>
-              <select v-if="!isGenMeeting"
-                v-model="selectedClient"
-                :class="[
-                  'meeting-schedule-input',
-                  errors.selectedClient ? 'error-input' : '',
-                ]"
+              <select
+                v-if="!isGenMeeting"
+                v-model="singleSelectedClient"
+                class="meeting-schedule-input"
               >
                 <option
                   v-for="lawyer in lawyerList"
                   :key="lawyer.id"
-                  :value="lawyer.name"
+                  :value="lawyer"
                 >
                   {{ lawyer.id }} - {{ lawyer.name }}
                 </option>
@@ -60,7 +58,11 @@
               <!-- <p v-if="errors.selectedClient" class="error-text">
                 {{ errors.selectedClient }}
               </p> -->
-              <div  v-if="isGenMeeting" class="multi-select-wrapper" ref="clientBox">
+              <div
+                v-if="isGenMeeting"
+                class="multi-select-wrapper"
+                ref="clientBox"
+              >
                 <input
                   type="text"
                   v-model="searchClient"
@@ -128,7 +130,7 @@
                 <option
                   v-for="lawyer in lawyerList"
                   :key="lawyer.id"
-                  :value="lawyer.name"
+                  :value="lawyer"
                 >
                   {{ lawyer.id }} - {{ lawyer.name }}
                 </option>
@@ -156,7 +158,7 @@
                 class="attendee-chip-inline"
                 :style="{ backgroundColor: attendeeColors[index] }"
               >
-                {{ person?.name }}
+                {{ person.name }}
                 <span class="attendee-remove" @click="removeAttendee(person)"
                   >×</span
                 >
@@ -245,10 +247,10 @@
           </div>
         </section>
 
-        <section>
+        <section v-if="!isGeneralMeeting">
           <h3 class="meeting-schedule-section-title">Payment Details</h3>
           <div class="meeting-schedule-grid-2">
-            <div class="field-wrapper">
+            <!-- <div class="field-wrapper">
               <label class="meeting-schedule-label">Amount</label>
               <input
                 type="number"
@@ -258,6 +260,27 @@
                   errors.amount ? 'error-input' : '',
                 ]"
               />
+              <p v-if="errors.amount" class="error-text">{{ errors.amount }}</p>
+            </div> -->
+
+            <div class="field-wrapper">
+              <label class="meeting-schedule-label">Amount</label>
+
+              <div class="amount-input-group">
+                <select v-model="currency" class="currency-select">
+                  <option value="Rs">Rs</option>
+                  <option value="USD">USD</option>
+                </select>
+
+                <input
+                  type="number"
+                  v-model="amount"
+                  class="amount-input"
+                  :class="[errors.amount ? 'error-input' : '']"
+                  placeholder="Enter amount"
+                />
+              </div>
+
               <p v-if="errors.amount" class="error-text">{{ errors.amount }}</p>
             </div>
 
@@ -336,196 +359,6 @@ import { getRandomChipColor } from "../utils/randomChipColor";
 import { dummyLawyers } from "../dummyData/allLawyers";
 import "../assets/styles/MeetingDetails.css";
 
-// export default {
-//   name: "MeetingDetails",
-//   components: { DatePicker },
-//   data() {
-//     return {
-//       meetTitle: "",
-//       selectedClient: "",
-//       selectedLawyer: "",
-//       appointmentDate: "",
-//       startTime: "",
-//       endTime: "",
-//       paymentStatus: "",
-//       amount: "",
-//       errors: {},
-//       lawyerList: dummyLawyers,
-//       blockedDates: ["2026-01-20", "2026-01-22", "2026-01-25"],
-//       attendeeList: [
-//         "Devjyoti Mukherjee",
-//         "Mahesh Chhetri",
-//         "Souvik Sarkar",
-//         "Pallab Adhikary",
-//         "Mainak Bhattacharya",
-//       ],
-//       attendeeColors: [],
-
-//       startDisplay: "",
-//       endDisplay: "",
-//       showStartDropdown: false,
-//       // filteredStartTimes: [],
-//       showEndDropdown: false,
-
-//       timeSlots: Array.from({ length: 48 }, (_, i) => {
-//         const hour = String(Math.floor(i / 2)).padStart(2, "0");
-//         const minute = i % 2 === 0 ? "00" : "30";
-//         return `${hour}:${minute}`;
-//       }),
-//     };
-//   },
-//   computed: {
-//     meetingId() {
-//       if (this.$route.path.includes("general-meeting")) return 3;
-//       if (this.$route.path.includes("client-meeting")) return 2;
-//       if (this.$route.path.includes("client-consultation")) return 1;
-//       return null;
-//     },
-//     currentMeeting() {
-//       return (
-//         meetingTypes.find((m) => m.id === this.meetingId) || meetingTypes[0]
-//       );
-//     },
-//     isClientMeeting() {
-//       return this.meetingId === 2;
-//     },
-//     isGeneralMeeting() {
-//       return this.meetingId === 3;
-//     },
-//   },
-//   created() {
-//     this.attendeeColors = this.attendeeList.map(() => getRandomChipColor());
-//   },
-
-//   mounted() {
-//     document.addEventListener("click", this.handleClickOutside);
-//   },
-
-//   beforeDestroy() {
-//     document.removeEventListener("click", this.handleClickOutside);
-//   },
-
-//   methods: {
-//     disableBlockedDates(date) {
-//       const year = date.getFullYear();
-//       const month = String(date.getMonth() + 1).padStart(2, "0");
-//       const day = String(date.getDate()).padStart(2, "0");
-//       const formatted = `${year}-${month}-${day}`;
-//       const today = new Date();
-//       today.setHours(0, 0, 0, 0);
-//       return this.blockedDates.includes(formatted) || date < today;
-//     },
-
-//     validateStartTime() {
-//       if (!/^\d{0,2}:?\d{0,2}$/.test(this.startTime)) return;
-
-//       if (this.startTime.length === 5 && /^\d{2}:\d{2}$/.test(this.startTime)) {
-//         const [h, m] = this.startTime.split(":");
-//         if (+h <= 23 && +m <= 59) return;
-//       }
-//     },
-
-//     openStartDropdown() {
-//       this.filteredStartTimes = this.timeSlots;
-//       this.showStartDropdown = true;
-//     },
-
-//     filterStartTimes() {
-//       const val = this.startTime.trim();
-//       this.showStartDropdown = true;
-
-//       if (!val) {
-//         this.filteredStartTimes = this.timeSlots;
-//         return;
-//       }
-
-//       this.filteredStartTimes = this.timeSlots.filter((t) => t.startsWith(val));
-//     },
-
-//     selectStartTime(t) {
-//       this.startTime = t;
-//       this.showStartDropdown = false;
-//     },
-
-//     /* ---------------- END TIME ---------------- */
-//     openEndDropdown() {
-//       this.filteredEndTimes = this.timeSlots;
-//       this.showEndDropdown = true;
-//     },
-
-//     filterEndTimes() {
-//       const val = this.endTime.trim();
-//       this.showEndDropdown = true;
-
-//       if (!val) {
-//         this.filteredEndTimes = this.timeSlots;
-//         return;
-//       }
-
-//       this.filteredEndTimes = this.timeSlots.filter((t) => t.startsWith(val));
-//     },
-
-//     selectEndTime(t) {
-//       this.endTime = t;
-//       this.showEndDropdown = false;
-//     },
-
-//     /* ---------------- CLICK OUTSIDE TO CLOSE ---------------- */
-
-//     handleClickOutside(event) {
-//       if (
-//         this.$refs.startPicker &&
-//         !this.$refs.startPicker.contains(event.target)
-//       ) {
-//         this.showStartDropdown = false;
-//       }
-
-//       if (
-//         this.$refs.endPicker &&
-//         !this.$refs.endPicker.contains(event.target)
-//       ) {
-//         this.showEndDropdown = false;
-//       }
-//     },
-
-//     validateForm() {
-//       const errors = {};
-//       if (this.isClientMeeting || this.isGeneralMeeting) {
-//         if (!this.meetTitle) errors.meetTitle = "Title is required";
-//       }
-//       if (!this.selectedClient) errors.selectedClient = "Client is required";
-//       if (!this.selectedLawyer) errors.selectedLawyer = "Lawyer is required";
-//       if (!this.appointmentDate) errors.appointmentDate = "Date required";
-//       if (!this.startTime) errors.startTime = "Start time required";
-//       if (!this.endTime) errors.endTime = "End time required";
-//       if (!this.amount) errors.amount = "Amount is required";
-//       if (!this.paymentStatus) errors.paymentStatus = "Select payment status";
-
-//       this.errors = errors;
-//       return Object.keys(errors).length === 0;
-//     },
-
-//     goNext() {
-//       if (!this.validateForm()) return;
-//       this.$router.push({
-//         path: "/schedule-meeting/client-consultation/mode",
-//         query: {
-//           client: this.selectedClient,
-//           lawyer: this.selectedLawyer,
-//           title: this.meetTitle,
-//           date: this.appointmentDate,
-//           start: this.startTime,
-//           end: this.endTime,
-//           amount: this.amount,
-//           status: this.paymentStatus,
-//           attendeeList: this.attendeeList,
-//         },
-//       });
-//     },
-
-//   },
-// };
-
 export default {
   name: "MeetingDetails",
   components: { DatePicker },
@@ -539,12 +372,14 @@ export default {
       searchClient: "",
       showClientDropdown: false,
 
+      singleSelectedClient: null,
+
       selectedLawyer: "",
       appointmentDate: "",
       startTime: "",
       endTime: "",
       paymentStatus: "",
-      amount: "",
+      // amount: "",
       errors: {},
 
       lawyerList: dummyLawyers,
@@ -559,6 +394,9 @@ export default {
       showStartDropdown: false,
       showEndDropdown: false,
 
+      currency: "Rs",
+      amount: "",
+
       timeSlots: Array.from({ length: 48 }, (_, i) => {
         const hour = String(Math.floor(i / 2)).padStart(2, "0");
         const minute = i % 2 === 0 ? "00" : "30";
@@ -567,40 +405,114 @@ export default {
     };
   },
 
+  // watch: {
+  //   isGeneralMeeting(newVal) {
+  //     this.isGenMeeting = newVal;
+  //   },
+  //   selectedClient: {
+  //     handler(newClients) {
+  //       const lawyerObject = this.selectedLawyer
+  //         ? { id: "lawyer", name: this.selectedLawyer }
+  //         : null;
+
+  //       this.attendeeList = [
+  //         ...newClients.map((c) => ({ id: c.id, name: c.name })),
+  //         ...(lawyerObject ? [lawyerObject] : []),
+  //       ];
+  //     },
+  //     deep: true,
+  //   },
+
+  //   selectedLawyer(newVal) {
+  //     const lawyerObject = newVal ? { id: "lawyer", name: newVal } : null;
+
+  //     this.attendeeList = [
+  //       ...this.selectedClient.map((c) => ({ id: c.id, name: c.name })),
+  //       ...(lawyerObject ? [lawyerObject] : []),
+  //     ];
+  //   },
+  //   attendeeList: {
+  //     handler(newVal) {
+  //       this.attendeeColors = newVal.map(() => getRandomChipColor());
+  //     },
+  //     deep: true,
+  //   },
+  // },
+
   watch: {
     isGeneralMeeting(newVal) {
       this.isGenMeeting = newVal;
     },
+
+    // Multi-Select Mode (General Meeting)
     selectedClient: {
       handler(newClients) {
+        if (!this.isGeneralMeeting) return; // skip in single-select mode
+
+        const list = Array.isArray(newClients) ? newClients : [];
+
         const lawyerObject = this.selectedLawyer
-          ? { id: "lawyer", name: this.selectedLawyer }
+          ? {
+              id: "lawyer",
+              name: this.selectedLawyer.name || this.selectedLawyer,
+            }
           : null;
 
         this.attendeeList = [
-          ...newClients.map((c) => ({ id: c.id, name: c.name })),
+          ...list.map((c) => ({ id: c.id, name: c.name })),
           ...(lawyerObject ? [lawyerObject] : []),
         ];
       },
       deep: true,
     },
 
-    selectedLawyer(newVal) {
-      const lawyerObject = newVal ? { id: "lawyer", name: newVal } : null;
+    // Single-Select Mode (Non-General Meeting)
+    singleSelectedClient(newVal) {
+      if (this.isGeneralMeeting) return;
 
-      this.attendeeList = [
-        ...this.selectedClient.map((c) => ({ id: c.id, name: c.name })),
-        ...(lawyerObject ? [lawyerObject] : []),
-      ];
+      const lawyerObject = this.selectedLawyer
+        ? {
+            id: "lawyer",
+            name: this.selectedLawyer.name || this.selectedLawyer,
+          }
+        : null;
+
+      this.attendeeList = newVal
+        ? [
+            { id: newVal.id, name: newVal.name },
+            ...(lawyerObject ? [lawyerObject] : []),
+          ]
+        : [...(lawyerObject ? [lawyerObject] : [])];
     },
-    attendeeList: {
-      handler(newVal) {
-        this.attendeeColors = newVal.map(() => getRandomChipColor());
-      },
-      deep: true,
+
+    // Lawyer watcher works for both modes
+    selectedLawyer(newVal) {
+      const lawyerObject = newVal
+        ? { id: "lawyer", name: newVal.name || newVal }
+        : null;
+
+      if (this.isGeneralMeeting) {
+        this.attendeeList = [
+          ...this.selectedClient.map((c) => ({ id: c.id, name: c.name })),
+          ...(lawyerObject ? [lawyerObject] : []),
+        ];
+      } else {
+        this.attendeeList = this.singleSelectedClient
+          ? [
+              {
+                id: this.singleSelectedClient.id,
+                name: this.singleSelectedClient.name,
+              },
+              ...(lawyerObject ? [lawyerObject] : []),
+            ]
+          : [...(lawyerObject ? [lawyerObject] : [])];
+      }
+    },
+
+    attendeeList(newVal) {
+      this.attendeeColors = newVal.map(() => getRandomChipColor());
     },
   },
-
   computed: {
     meetingId() {
       if (this.$route.path.includes("general-meeting")) return 3;
@@ -632,6 +544,10 @@ export default {
     filteredClientList() {
       const q = this.searchClient.toLowerCase();
       return this.lawyerList.filter((l) => l.name.toLowerCase().includes(q));
+    },
+
+    formattedAmount() {
+      return this.amount ? `${this.currency} ${this.amount}` : "";
     },
   },
 
@@ -781,15 +697,26 @@ export default {
       }
 
       // Updated for array
-      if (this.selectedClient.length === 0)
-        errors.selectedClient = "Client is required";
+      if (this.isGeneralMeeting) {
+        if (this.selectedClient.length === 0)
+          errors.selectedClient = "Select at least one client";
+      } else {
+        if (!this.singleSelectedClient)
+          errors.selectedClient = "Select a client";
+      }
 
       if (!this.selectedLawyer) errors.selectedLawyer = "Lawyer is required";
       if (!this.appointmentDate) errors.appointmentDate = "Date required";
       if (!this.startTime) errors.startTime = "Start time required";
       if (!this.endTime) errors.endTime = "End time required";
-      if (!this.amount) errors.amount = "Amount is required";
-      if (!this.paymentStatus) errors.paymentStatus = "Select payment status";
+      if (!this.isGeneralMeeting) {
+        if (!this.amount) errors.amount = "Amount is required";
+      }
+      if (!this.isGeneralMeeting) {
+        if (!this.paymentStatus) errors.paymentStatus = "Amount is required";
+      }
+
+      // if (!this.paymentStatus) errors.paymentStatus = "Select payment status";
 
       this.errors = errors;
       return Object.keys(errors).length === 0;
@@ -834,19 +761,26 @@ export default {
     },
     /* ---------------- NEXT PAGE ---------------- */
 
+    normalizeSingleClient() {
+      if (!Array.isArray(this.selectedClient)) {
+        this.selectedClient = [this.selectedClient];
+      }
+    },
     goNext() {
       if (!this.validateForm()) return;
 
       this.$router.push({
         path: "/schedule-meeting/client-consultation/mode",
         query: {
-          client: JSON.stringify(this.selectedClient),
-          lawyer: this.selectedLawyer,
+          client: this.isGeneralMeeting
+            ? JSON.stringify(this.selectedClient)
+            : JSON.stringify(this.singleSelectedClient),
+          lawyer: JSON.stringify(this.selectedLawyer),
           title: this.meetTitle,
           date: this.appointmentDate,
           start: this.startTime,
           end: this.endTime,
-          amount: this.amount,
+          amount: `${this.currency} ${this.amount}`,
           status: this.paymentStatus,
           attendeeList: this.attendeeList,
           isGenMeeting: this.isGenMeeting ? "true" : "false",
