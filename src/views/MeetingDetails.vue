@@ -134,19 +134,51 @@
         <section v-if="isGeneralMeeting">
           <div class="attendee-row">
             <span class="attendee-label">Attendees :</span>
-            <span class="attendee-value">
-              <span
-                v-for="(person, index) in attendeeList"
-                :key="index"
-                class="attendee-chip-inline"
-                :style="{ backgroundColor: attendeeColors[index] }"
-              >
-                {{ person.name }}
-                <span class="attendee-remove" @click="removeAttendee(person)"
-                  >×</span
+
+            <div class="attendee-container" ref="attendeeBox">
+              <!-- Selected Attendee Chips -->
+              <div class="selected-attendees" @click="openAttendeeDropdown">
+                <span
+                  v-for="att in selectedAttendees"
+                  :key="att.id"
+                  class="attendee-chip-inline"
                 >
-              </span>
-            </span>
+                  {{ att.name }}
+                  <span
+                    class="attendee-remove"
+                    @click.stop="removeSelectedAttendee(att)"
+                    >×</span
+                  >
+                </span>
+
+                <!-- Search Input -->
+                <input
+                  type="text"
+                  v-model="searchAttendee"
+                  class="attendee-search-input"
+                  placeholder="Search attendee..."
+                  @input="onAttendeeSearchInput"
+                  @focus="openAttendeeDropdown"
+                />
+              </div>
+
+              <!-- Dropdown -->
+              <div v-if="showAttendeeDropdown" class="attendee-dropdown">
+                <div
+                  class="dropdown-item"
+                  v-for="att in filteredAttendees"
+                  :key="att.id"
+                  @click="selectAttendee(att)"
+                >
+                  <strong>{{ att.name }}</strong>
+                  <!-- <small>({{ att.email }})</small> -->
+                </div>
+
+                <div v-if="filteredAttendees.length === 0" class="no-result">
+                  No attendee found
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -372,7 +404,16 @@ export default {
 
       blockedDates: ["2026-01-20", "2026-01-22", "2026-01-25"],
 
-      attendeeList: [],
+      attendeeList: [
+        { id: 1, name: "Devjyoti", email: "devjyoti@gmail.com" },
+        { id: 2, name: "Rahul", email: "rahul@gmail.com" },
+        { id: 3, name: "Priya", email: "priya@gmail.com" },
+        { id: 4, name: "Amit", email: "amit@gmail.com" },
+      ],
+
+      selectedAttendees: [],
+      showAttendeeDropdown: false,
+      searchAttendee: "",
       attendeeColors: [],
 
       startDisplay: "",
@@ -399,71 +440,71 @@ export default {
       this.isGenMeeting = newVal;
     },
 
-    selectedClient: {
-      handler(newClients) {
-        if (!this.isGeneralMeeting) return;
+    // selectedClient: {
+    //   handler(newClients) {
+    //     if (!this.isGeneralMeeting) return;
 
-        const list = Array.isArray(newClients) ? newClients : [];
+    //     const list = Array.isArray(newClients) ? newClients : [];
 
-        const lawyerObject = this.selectedLawyer
-          ? {
-              id: "lawyer",
-              name: this.selectedLawyer.name || this.selectedLawyer,
-            }
-          : null;
+    //     const lawyerObject = this.selectedLawyer
+    //       ? {
+    //           id: "lawyer",
+    //           name: this.selectedLawyer.name || this.selectedLawyer,
+    //         }
+    //       : null;
 
-        this.attendeeList = [
-          ...list.map((c) => ({ id: c.id, name: c.name })),
-          ...(lawyerObject ? [lawyerObject] : []),
-        ];
-      },
-      deep: true,
-    },
+    //     this.attendeeList = [
+    //       ...list.map((c) => ({ id: c.id, name: c.name })),
+    //       ...(lawyerObject ? [lawyerObject] : []),
+    //     ];
+    //   },
+    //   deep: true,
+    // },
 
-    singleSelectedClient(newVal) {
-      if (this.isGeneralMeeting) return;
+    // singleSelectedClient(newVal) {
+    //   if (this.isGeneralMeeting) return;
 
-      const lawyerObject = this.selectedLawyer
-        ? {
-            id: "lawyer",
-            name: this.selectedLawyer.name || this.selectedLawyer,
-          }
-        : null;
+    //   const lawyerObject = this.selectedLawyer
+    //     ? {
+    //         id: "lawyer",
+    //         name: this.selectedLawyer.name || this.selectedLawyer,
+    //       }
+    //     : null;
 
-      this.attendeeList = newVal
-        ? [
-            { id: newVal.id, name: newVal.name },
-            ...(lawyerObject ? [lawyerObject] : []),
-          ]
-        : [...(lawyerObject ? [lawyerObject] : [])];
-    },
+    //   this.attendeeList = newVal
+    //     ? [
+    //         { id: newVal.id, name: newVal.name },
+    //         ...(lawyerObject ? [lawyerObject] : []),
+    //       ]
+    //     : [...(lawyerObject ? [lawyerObject] : [])];
+    // },
 
-    selectedLawyer(newVal) {
-      const lawyerObject = newVal
-        ? { id: "lawyer", name: newVal.name || newVal }
-        : null;
+    // selectedLawyer(newVal) {
+    //   const lawyerObject = newVal
+    //     ? { id: "lawyer", name: newVal.name || newVal }
+    //     : null;
 
-      if (this.isGeneralMeeting) {
-        this.attendeeList = [
-          ...this.selectedClient.map((c) => ({ id: c.id, name: c.name })),
-          ...(lawyerObject ? [lawyerObject] : []),
-        ];
-      } else {
-        this.attendeeList = this.singleSelectedClient
-          ? [
-              {
-                id: this.singleSelectedClient.id,
-                name: this.singleSelectedClient.name,
-              },
-              ...(lawyerObject ? [lawyerObject] : []),
-            ]
-          : [...(lawyerObject ? [lawyerObject] : [])];
-      }
-    },
+    //   if (this.isGeneralMeeting) {
+    //     this.attendeeList = [
+    //       ...this.selectedClient.map((c) => ({ id: c.id, name: c.name })),
+    //       ...(lawyerObject ? [lawyerObject] : []),
+    //     ];
+    //   } else {
+    //     this.attendeeList = this.singleSelectedClient
+    //       ? [
+    //           {
+    //             id: this.singleSelectedClient.id,
+    //             name: this.singleSelectedClient.name,
+    //           },
+    //           ...(lawyerObject ? [lawyerObject] : []),
+    //         ]
+    //       : [...(lawyerObject ? [lawyerObject] : [])];
+    //   }
+    // },
 
-    attendeeList(newVal) {
-      this.attendeeColors = newVal.map(() => getRandomChipColor());
-    },
+    // attendeeList(newVal) {
+    //   this.attendeeColors = newVal.map(() => getRandomChipColor());
+    // },
   },
 
   computed: {
@@ -487,6 +528,17 @@ export default {
 
     selectedLawyerName() {
       return this.selectedLawyer ? this.selectedLawyer.name : this.searchLawyer;
+    },
+
+    filteredAttendees() {
+      let selectedIds = this.selectedAttendees.map((a) => a.id);
+
+      return this.attendeeList.filter((person) => {
+        return (
+          !selectedIds.includes(person.id) &&
+          person.name.toLowerCase().includes(this.searchAttendee.toLowerCase())
+        );
+      });
     },
 
     meetingId() {
@@ -579,6 +631,44 @@ export default {
       this.selectedLawyer = lawyer;
       this.searchLawyer = lawyer.name;
       this.showLawyerDropdown = false;
+    },
+
+    // FOR ATTENDEES
+
+    openAttendeeDropdown() {
+      this.showAttendeeDropdown = true;
+    },
+
+    onAttendeeSearchInput(e) {
+      this.searchAttendee = e.target.value;
+      this.showAttendeeDropdown = true;
+    },
+
+    selectAttendee(attendee) {
+      // Prevent duplicates
+      if (!this.selectedAttendees.some((a) => a.id === attendee.id)) {
+        this.selectedAttendees.push(attendee);
+      }
+      this.searchAttendee = "";
+      this.showAttendeeDropdown = true;
+    },
+
+    removeSelectedAttendee(attendee) {
+      this.selectedAttendees = this.selectedAttendees.filter(
+        (a) => a.id !== attendee.id
+      );
+    },
+
+    isAttendeeSelected(attendee) {
+      return this.selectedAttendees.some((a) => a.id === attendee.id);
+    },
+
+    toggleAttendeeSelection(attendee) {
+      if (this.isAttendeeSelected(attendee)) {
+        this.removeSelectedAttendee(attendee);
+      } else {
+        this.selectAttendee(attendee);
+      }
     },
 
     disableBlockedDates(date) {
@@ -683,6 +773,13 @@ export default {
       ) {
         this.showEndDropdown = false;
       }
+
+      if (
+        this.$refs.attendeeBox &&
+        !this.$refs.attendeeBox.contains(event.target)
+      ) {
+        this.showAttendeeDropdown = false;
+      }
     },
 
     validateForm() {
@@ -751,7 +848,9 @@ export default {
           end: this.endTime,
           amount: `${this.currency} ${this.amount}`,
           status: this.paymentStatus,
-          attendeeList: this.attendeeList,
+          attendeeList: this.isGeneralMeeting
+            ? JSON.stringify(this.selectedAttendees)
+            : JSON.stringify([]),
           isGenMeeting: this.isGenMeeting ? "true" : "false",
         },
       });
@@ -962,5 +1061,150 @@ export default {
 /* Error border */
 .error-input {
   border-color: #d32f2f !important;
+}
+
+.attendee-row {
+  display: flex;
+  align-items: center; /* Centers vertically */
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.attendee-label {
+  font-weight: 600;
+  font-size: 14px;
+  min-width: 90px; /* Aligns left labels consistently */
+  display: flex;
+  align-items: center; /* Ensures text is centered */
+  height: 100%;
+}
+
+.attendee-container {
+  position: relative;
+  width: 100%; /* take full width of parent */
+  max-width: 380px; /* slightly wider and modern */
+}
+
+/* Selected Area Box */
+.selected-attendees {
+  border: 1px solid #d0d7de;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  cursor: text;
+  min-height: 42px;
+  transition: border-color 0.2s ease;
+}
+
+.selected-attendees:focus-within {
+  border-color: #3b82f6; /* blue focus border */
+}
+
+/* Chips */
+.attendee-chip-inline {
+  display: flex;
+  align-items: center;
+  background: #e8f0fe;
+  border: 1px solid #c9dafc;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 13px;
+  color: #1f2937;
+  font-weight: 500;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.attendee-chip-inline:hover {
+  background: #dbeafe; /* soft blue hover */
+}
+
+/* Remove icon */
+.attendee-remove {
+  color: #1e40af;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.attendee-remove:hover {
+  color: #dc2626;
+}
+
+/* Search input */
+.attendee-search-input {
+  border: none;
+  outline: none;
+  flex: 1;
+  min-width: 140px;
+  font-size: 14px;
+  padding: 6px;
+  background: transparent;
+}
+
+/* Dropdown area */
+.attendee-dropdown {
+  border: 1px solid #d0d7de;
+  background: #ffffff;
+  border-radius: 8px;
+  position: absolute;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  margin-top: 6px;
+  z-index: 1000;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  animation: dropdownFade 0.2s ease-out;
+}
+
+/* Smooth fade */
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dropdown item */
+.dropdown-item {
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #111827;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dropdown-item small {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.dropdown-item:hover {
+  background: #f3f4f6;
+  border-left: 3px solid #3b82f6; /* blue indicator */
+  padding-left: 12px; /* compensate for border */
+}
+
+/* When no results */
+.no-result {
+  padding: 12px;
+  text-align: center;
+  font-style: italic;
+  color: #6b7280;
+}
+
+.no-result {
+  padding: 8px;
+  color: #777;
 }
 </style>

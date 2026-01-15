@@ -145,6 +145,13 @@
             <span class="value">{{ form.lawyerName.name || "—" }}</span>
           </div>
 
+          <div class="item" v-if="form.attendees && form.attendees.length">
+            <span class="label">Attendees</span>
+            <span class="value">
+              {{ form.attendees.map((a) => a.name).join(", ") }}
+            </span>
+          </div>
+
           <div class="item">
             <span class="label">Date</span>
             <span class="value">{{ form.date || "—" }}</span>
@@ -206,6 +213,17 @@
           <div class="modal-row">
             <strong>Lawyer : </strong> {{ form.lawyerName.name }}
           </div>
+
+          <div
+            class="modal-row"
+            v-if="
+              form.attendees && form.attendees.length && form.isGeneralMeeting
+            "
+          >
+            <strong>Attendees : </strong>
+            {{ form.attendees.map((a) => a.name).join(", ") }}
+          </div>
+
           <div class="modal-row"><strong>Date:</strong> {{ form.date }}</div>
           <div class="modal-row">
             <strong>Time : </strong> {{ form.startTime }} - {{ form.endTime }}
@@ -291,6 +309,7 @@ export default {
         message: "",
         paymentStatus: "",
         isGeneralMeeting: false,
+        attendees: [],
       },
     };
   },
@@ -302,7 +321,7 @@ export default {
       // Close review modal
       this.showReviewModal = false;
 
-      console.log("All form =>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",this.form )
+      console.log("All form =>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", this.form);
 
       // Open success modal after slight delay
       setTimeout(() => {
@@ -345,6 +364,22 @@ export default {
       } catch (err) {
         this.form.lawyerName = { name: q.lawyer }; // fallback object
       }
+    }
+
+    if (q.attendeeList) {
+      try {
+        const parsedAttendees = JSON.parse(q.attendeeList);
+
+        if (Array.isArray(parsedAttendees)) {
+          this.form.attendees = parsedAttendees; // store full list
+        } else {
+          this.form.attendees = [];
+        }
+      } catch (e) {
+        this.form.attendees = [];
+      }
+    } else {
+      this.form.attendees = [];
     }
 
     this.form.date = q.date || "";
